@@ -5,6 +5,8 @@
 Test.py
 data/
 data_markup/
+prepare_data_markup/
+processed_text/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
