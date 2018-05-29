@@ -1,0 +1,46 @@
+# https://pymorphy2.readthedocs.io/en/latest/user/grammemes.html#non-standard-grammemes
+# https://tech.yandex.ru/mystem/doc/grammemes-values-docpage/
+
+A ,  # прилагательное
+ADV ,  # наречие
+ADVPRO ,  # местоименное наречие
+ANUM ,  # числительное-прилагательное
+APRO ,  # местоимение-прилагательное
+COM ,  # часть композита - сложного слова
+CONJ ,  # союз
+INTJ ,  # междометие
+NUM ,  # числительное
+PART ,  # частица
+PR ,  # предлог
+S ,  # существительное
+SPRO ,  # местоимение-существительное
+V   # глагол
+
+input: Красивая мама красиво мыла раму
+full info: [
+                {
+                    "text": "Красивая",
+                    "analysis": [ {"lex": "красивый", "gr": "A=им,ед,полн,жен"} ]
+                },
+                {"text": " "},
+                {
+                    "text": "мама",
+                    "analysis": [ {"lex": "мама", "gr": "S,жен,од=им,ед"} ]
+                },
+                {"text": " "},
+                {
+                    "text": "красиво",
+                    "analysis": [ {"lex": "красиво", "gr": "ADV="} ]
+                },
+                {"text": " "},
+                {
+                    "text": "мыла",
+                    "analysis": [ {"lex": "мыть", "gr": "V,несов,пе=прош,ед,изъяв,жен"} ]
+                },
+                {"text": " "},
+                {
+                    "text": "раму",
+                    "analysis": [ {"lex": "рама", "gr": "S,жен,неод=вин,ед"} ]
+                },
+                {"text": "\n"}
+        ]
