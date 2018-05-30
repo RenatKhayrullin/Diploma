@@ -123,7 +123,7 @@ class TextTokens:
 
         with io.open(str(os.path.join(out_path, "parsed_documents.txt")), 'a', encoding='utf8') as parsed_documents, \
                 io.open(str(os.path.join(out_path, "raw_documents.txt")), 'a', encoding='utf8') as raw_documents, \
-                io.open(str(os.path.join(out_path, "entitiy_mentions.txt")), 'a', encoding='utf8') as entitiy_mentions, \
+                io.open(str(os.path.join(out_path, "entity_mentions.txt")), 'a', encoding='utf8') as entitiy_mentions, \
                 io.open(str(os.path.join(out_path, "relation_mentions.txt")), 'a', encoding='utf8') as relation_mentions, \
                 io.open(str(os.path.join(out_path, "segmented_documents.txt")), 'a', encoding='utf8') as phr_seg:
 
@@ -392,8 +392,8 @@ class TextTokens:
 
 
 if __name__ == "__main__":
-    input_path = "/Users/Reist/PycharmProjects/prepate_data/data/"
-    out_path = "/Users/Reist/PycharmProjects/prepate_data/processed_text"
+    input_path = "/Users/Reist/PycharmProjects/Diploma/data/"
+    out_path = "/Users/Reist/PycharmProjects/Diploma/processed_text"
     if not os.path.exists(out_path):
         os.makedirs(out_path)
 

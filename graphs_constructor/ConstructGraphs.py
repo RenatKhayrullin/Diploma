@@ -62,11 +62,9 @@ def construct_biadjacency_G(mentions, dictionary, filename):
 
 def load_dict(file_path):
     elem_dict = {}
-    elem_dict_pos = 0
     with io.open(file_path, 'r', encoding='utf8') as elem_dictionary:
-        for row in elem_dictionary:
-            elem_dict[row.replace("\n", "").split(",")[0]] = elem_dict_pos
-            elem_dict_pos += 1
+        for i, row in enumerate(elem_dictionary):
+            elem_dict[row.replace("\n", "").split(",")[0]] = i
         elem_dictionary.close()
     return elem_dict
 
@@ -397,24 +395,44 @@ def construct_relation_phrase_context(corpus_tokens, rp_dictionary, vocablulary,
         missed_features.close()
 
 
+def generate_initial_approx(corpus_tokens):
+    corpus_len = len(corpus_tokens)
+    corpus_idx = xrange(corpus_len)
+
+    entity_types_dict = {}
+    with io.open("entity_types.txt", 'r', encoding='utf8') as entity_types:
+        for i, line in enumerate(entity_types):
+            entity_types_dict[line.replace("\n", "")] = i
+        entity_types.close()
+
+    corpus_ems = [(corpus_tokens[i][5], corpus_tokens[i][7]) for i in corpus_idx if corpus_tokens[i][-1] == u"EM"
+                  and (corpus_tokens[i][7] == u"PERS" or corpus_tokens[i][7] == u"LOC" or corpus_tokens[i][7] == u"ORG")]
+    ems = zip(xrange(len(corpus_ems)), corpus_ems)
+
+    with io.open("Y.txt", 'a', encoding='utf8') as Y_0:
+        for em in ems:
+            Y_0.write(unicode(str(em[0]) + " " + str(entity_types_dict[em[1][1]]) + " " + str(1) + "\n"))
+        Y_0.close()
+
+
 if __name__ == "__main__":
-    out_path = "/Users/Reist/PycharmProjects/prepate_data/processed_text/"
+    out_path = "/Users/Reist/PycharmProjects/Diploma/processed_text/"
 
     text_corpus = []
     with io.open(out_path + "raw_documents.txt", 'r', encoding='utf8') as raw_documents:
         for line in raw_documents:
             text_corpus.append(line.replace("\n", ""))
     raw_documents.close()
-
-    vocab = tf_idf_vocabulary(text_corpus)
-    word2vec_model = word2vec_vocabulary(text_corpus)
-
     doc_tokens = load_parsed_documents(out_path + "parsed_documents.txt")
 
+    '''
+    vocab = tf_idf_vocabulary(text_corpus)
+    word2vec_model = word2vec_vocabulary(text_corpus)
+    
     entity_dict = load_dict(out_path + "entity_dictionary.txt")
     relation_dict = load_dict(out_path + "relation_dictionary.txt")
 
-    entity_ment = load_mentions(out_path + "entitiy_mentions.txt")
+    entity_ment = load_mentions(out_path + "entity_mentions.txt")
     l_entity_rel_ment = load_mentions(out_path + "left_entity_relation.txt")
     r_entity_rel_ment = load_mentions(out_path + "right_entity_relation.txt")
 
@@ -424,3 +442,5 @@ if __name__ == "__main__":
 
     construct_ment_ment_G(doc_tokens, entity_dict, 3)
     construct_relation_phrase_context(doc_tokens, relation_dict, vocab, 5)
+    '''
+    generate_initial_approx(doc_tokens)

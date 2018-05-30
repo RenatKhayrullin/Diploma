@@ -1,4 +1,5 @@
 #my project folders and files
+*.npy
 *.txt
 .idea/
 *.bin
