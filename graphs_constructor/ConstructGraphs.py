@@ -425,7 +425,6 @@ if __name__ == "__main__":
     raw_documents.close()
     doc_tokens = load_parsed_documents(out_path + "parsed_documents.txt")
 
-    '''
     vocab = tf_idf_vocabulary(text_corpus)
     word2vec_model = word2vec_vocabulary(text_corpus)
     
@@ -442,5 +441,5 @@ if __name__ == "__main__":
 
     construct_ment_ment_G(doc_tokens, entity_dict, 3)
     construct_relation_phrase_context(doc_tokens, relation_dict, vocab, 5)
-    '''
+
     generate_initial_approx(doc_tokens)

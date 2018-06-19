@@ -8,6 +8,7 @@ data/
 data_markup/
 prepare_data_markup/
 processed_text/
+parse_datasets/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
