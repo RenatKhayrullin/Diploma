@@ -141,6 +141,7 @@ class TextTokens:
                 sentence_partitions = []
                 new_partition = []
                 token_no = 0
+
                 for j in xrange(len(sent_morph)):
                     token = sent_morph[j]
                     partition_no = len(sentence_partitions)
@@ -392,7 +393,7 @@ class TextTokens:
 
 
 if __name__ == "__main__":
-    input_path = "/Users/Reist/PycharmProjects/Diploma/data/"
+    input_path = "/Users/Reist/PycharmProjects/NER_DATA/data"
     out_path = "/Users/Reist/PycharmProjects/Diploma/processed_text"
     if not os.path.exists(out_path):
         os.makedirs(out_path)
