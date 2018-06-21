@@ -321,7 +321,6 @@ def clustype_algorithm(S_L, S_R, S_M, G_Q, G_L, G_R, Y_0, F_s, F_c,
             F = trace(2 * C.T * C + P_L.T * P_L + P_R.T * P_R - 2 * C.T * S_L * P_L - 2 * C.T * S_R * P_R)
             Omega = norm(Y - Theta, ord='fro') ** 2 + gamma * trace(Y.T * Y - Y.T * S_M * Y) + mu * norm(Y - Y_0, ord='fro') ** 2
 
-
             objective = F + Omega + obj_multiNMF
 
             Y = G_Q * C + G_L * P_L + G_R * P_R

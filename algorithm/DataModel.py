@@ -178,8 +178,8 @@ if __name__ == "__main__":
     tol = 5e-4
     gamma, mu, alpha = 0.5, 0.5, 1.
 
-    seed_sizes = [1, 7, 15, 20, 30, 40]
-    clusters_counts = [10]  # [10, 30, 50, 100, 150, 200]
+    seed_sizes = [5, 10, 15, 20, 25, 30, 35, 40]
+    clusters_counts = [10, 50, 100, 200]  # [10, 30, 50, 100, 150, 200]
     glob_iter_count, inner_iter_count, nmf_iter_count = 150, 150, 150
     T = 3
 

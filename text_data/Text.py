@@ -35,6 +35,7 @@ class TextTokens:
         stop_words = stopwords.words(language)
         stop_words += get_stop_words(lang)
         self.stws = set()
+
         for stw in stop_words:
             self.stws.add(stw.decode("utf8"))
 
@@ -154,6 +155,7 @@ class TextTokens:
                         if len(new_partition) > 0:
                             sentence_partitions.append(new_partition)
                             new_partition = []
+
                 if len(new_partition) > 0:
                     sentence_partitions.append(new_partition)
 

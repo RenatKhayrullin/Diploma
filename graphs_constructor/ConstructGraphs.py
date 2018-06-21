@@ -395,7 +395,7 @@ def construct_relation_phrase_context(corpus_tokens, rp_dictionary, vocablulary,
         missed_features.close()
 
 
-def generate_initial_approx(corpus_tokens):
+def  generate_initial_approx(corpus_tokens):
     corpus_len = len(corpus_tokens)
     corpus_idx = xrange(corpus_len)
 
