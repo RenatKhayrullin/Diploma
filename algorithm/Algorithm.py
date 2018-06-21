@@ -1,4 +1,5 @@
 import numpy as np
+import io
 from scipy import *
 from scipy.sparse import *
 from numpy.linalg import norm
@@ -186,7 +187,7 @@ def multiNMF(P_L, U_L, V_L, betaWL, obj_WL,
            Ustar, obj_multiNMF
 
 
-def clustype_no_clus_algorithm(file_prefix, S_L, S_R, S_M, G_Q, G_L, G_R, Y_0, gamma, mu, iter_count):
+def clustype_no_clus_algorithm(S_L, S_R, S_M, G_Q, G_L, G_R, Y_0, gamma, mu, iter_count, file_base_name):
 
     G_LL = G_L.T * G_L
     G_RR = G_R.T * G_R
@@ -206,36 +207,35 @@ def clustype_no_clus_algorithm(file_prefix, S_L, S_R, S_M, G_Q, G_L, G_R, Y_0, g
     Omega = norm(Y - Theta, ord='fro') ** 2 + gamma * trace(Y.T * Y - Y.T * S_M * Y) + mu * norm(Y - Y_0, ord='fro') ** 2
     objective = F + Omega
 
-    ### Start algorithm #############################################################
-    for i in range(iter_count):
-        print "itr = " + str(i) + " objective_value = " + str(objective)
+    err_rate = file_base_name + "_err.txt"
+    with io.open(err_rate, 'a', encoding='utf8') as no_clus_err_rate:
 
-        lambda4 = 1 + gamma + mu
-        Y = 1 / lambda4 * (gamma * S_M * Y + Theta + mu * Y_0)
-        # Y = inverse_matrix(lambda4 * identity(m) - gamma * S_M) * (Theta + mu * Y_0)
-        C = 0.5 * (S_L * P_L + S_R * P_R + G_Q.T * (Y - G_L * P_L - G_R * P_R))
-        P_L = inverse_matrix(identity(k) + G_LL) * (S_L.T * C + G_L.T * (Y - G_Q * C - G_R * P_R))
-        P_R = inverse_matrix(identity(k) + G_RR) * (S_R.T * C + G_R.T * (Y - G_Q * C - G_R * P_L))
+        for i in range(iter_count):
+            no_clus_err_rate.write(unicode(str(i) + ";" + str(objective)+"\n"))
 
-        Theta = G_Q * C + G_L * P_L + G_R * P_R
+            lambda4 = 1 + gamma + mu
+            Y = 1 / lambda4 * (gamma * S_M * Y + Theta + mu * Y_0)
+            # Y = inverse_matrix(lambda4 * identity(m) - gamma * S_M) * (Theta + mu * Y_0)
+            C = 0.5 * (S_L * P_L + S_R * P_R + G_Q.T * (Y - G_L * P_L - G_R * P_R))
+            P_L = inverse_matrix(identity(k) + G_LL) * (S_L.T * C + G_L.T * (Y - G_Q * C - G_R * P_R))
+            P_R = inverse_matrix(identity(k) + G_RR) * (S_R.T * C + G_R.T * (Y - G_Q * C - G_R * P_L))
 
-        matrix_F = 2 * C.T * C + P_L.T * P_L + P_R.T * P_R - 2 * C.T * S_L * P_L - 2 * C.T * S_R * P_R
-        F = trace(matrix_F)
-        Omega = norm(Y - Theta, ord='fro') ** 2 + gamma * trace(Y.T * Y - Y.T * S_M * Y) + mu * norm(Y - Y_0, ord='fro') ** 2
-        objective = F + Omega
+            Theta = G_Q * C + G_L * P_L + G_R * P_R
 
-        objective_old = objective
+            matrix_F = 2 * C.T * C + P_L.T * P_L + P_R.T * P_R - 2 * C.T * S_L * P_L - 2 * C.T * S_R * P_R
+            F = trace(matrix_F)
+            Omega = norm(Y - Theta, ord='fro') ** 2 + gamma * trace(Y.T * Y - Y.T * S_M * Y) + mu * norm(Y - Y_0, ord='fro') ** 2
+            objective = F + Omega
 
-        print 'itr = ', i, 'obj: ', objective, 'rel obj change: ', (objective_old - objective) / objective_old
-
-    Y = G_Q * C + G_L * P_L + G_R * P_R
+        Y = G_Q * C + G_L * P_L + G_R * P_R
+        no_clus_err_rate.close()
 
     return Y, C, P_L, P_R
 
 
 def clustype_algorithm(S_L, S_R, S_M, G_Q, G_L, G_R, Y_0, F_s, F_c,
                        Y_init, C_init, P_L_init, P_R_init,
-                       gamma, mu, alpha, T, K, glob_iter_count, inner_iter_count, nmf_iter_count, tol):
+                       gamma, mu, alpha, T, K, glob_iter_count, inner_iter_count, nmf_iter_count, tol, file_base_name):
     G_LL = G_L.T * G_L
     G_RR = G_R.T * G_R
 
@@ -276,52 +276,54 @@ def clustype_algorithm(S_L, S_R, S_M, G_Q, G_L, G_R, Y_0, F_s, F_c,
     Omega = norm(Y - Theta, ord='fro') ** 2 + gamma * trace(Y.T * Y - Y.T * S_M * Y) + mu * norm(Y - Y_0, ord='fro') ** 2
     objective = F + Omega
 
+    glob_err_rate = file_base_name + "_glob_err.txt"
     for i in range(glob_iter_count):
-        lambda4 = 1 + gamma + mu
-        Y = 1 / lambda4 * (gamma * S_M * Y + Theta + mu * Y_0)
-        # Y = inverse_matrix(lambda4 * identity(m) - gamma * S_M) * (Theta + mu * Y_0)
-        C = 1 / 2 * (S_L * P_L + S_R * P_R + G_Q.T * (Y - G_L * P_L - G_R * P_R))
-        P_L = inverse_matrix((1 + beta_L) * identity(k) + G_LL) * (S_L.T * C + G_L.T * (Y - G_Q * C - G_R * P_R) + beta_L * U_L * V_L.T)
-        P_R = inverse_matrix((1 + beta_R) * identity(k) + G_RR) * (S_R.T * C + G_R.T * (Y - G_Q * C - G_R * P_L) + beta_R * U_R * V_R.T)
+        with io.open(glob_err_rate, 'a', encoding='utf8') as clus_glob_err_rate:
+            clus_glob_err_rate.write(unicode(str(i) + ";" + str(objective)+"\n"))
 
-        # comupute initial approx for U, V
-        if i == 0:
-            (U_L, V_L, obj_WL) = NMF(P_L, U_L, V_L, nmf_iter_count, tol)
-            (U_R, V_R, obj_WR) = NMF(P_R, U_R, V_R, nmf_iter_count, tol)
-            (Us_, V_s, obj_Fs) = NMF(F_s, U_s, V_s, nmf_iter_count, tol)
+            lambda4 = 1 + gamma + mu
+            Y = 1 / lambda4 * (gamma * S_M * Y + Theta + mu * Y_0)
+            # Y = inverse_matrix(lambda4 * identity(m) - gamma * S_M) * (Theta + mu * Y_0)
+            C = 1 / 2 * (S_L * P_L + S_R * P_R + G_Q.T * (Y - G_L * P_L - G_R * P_R))
+            P_L = inverse_matrix((1 + beta_L) * identity(k) + G_LL) * (
+                        S_L.T * C + G_L.T * (Y - G_Q * C - G_R * P_R) + beta_L * U_L * V_L.T)
+            P_R = inverse_matrix((1 + beta_R) * identity(k) + G_RR) * (
+                        S_R.T * C + G_R.T * (Y - G_Q * C - G_R * P_L) + beta_R * U_R * V_R.T)
 
-            obj_multiNMF = beta_L * obj_WL + beta_R * obj_WR + beta_Fs * obj_Fs
+            # pre comupute initial approx for U, V
+            if i == 0:
+                (U_L, V_L, obj_WL) = NMF(P_L, U_L, V_L, nmf_iter_count, tol)
+                (U_R, V_R, obj_WR) = NMF(P_R, U_R, V_R, nmf_iter_count, tol)
+                (Us_, V_s, obj_Fs) = NMF(F_s, U_s, V_s, nmf_iter_count, tol)
 
-            objective += obj_multiNMF
+                obj_multiNMF = beta_L * obj_WL + beta_R * obj_WR + beta_Fs * obj_Fs
 
-            P_L_norm = sqrt(sum(P_L.data) ** 2) if issparse(P_L) else sqrt(sum(square(P_L)))
-            U_L, V_L, _ = normalize_UV(U_L, V_L, P_L_norm)
+                objective += obj_multiNMF
 
-            P_R_norm = sqrt(sum(P_R.data) ** 2) if issparse(P_R) else sqrt(sum(square(P_R)))
-            U_R, V_R, _ = normalize_UV(U_R, V_R, P_R_norm)
+                P_L_norm = sqrt(sum(P_L.data) ** 2) if issparse(P_L) else sqrt(sum(square(P_L)))
+                U_L, V_L, _ = normalize_UV(U_L, V_L, P_L_norm)
 
-            F_s_norm = sqrt(sum(F_s.data) ** 2) if issparse(F_s) else sqrt(sum(square(F_s)))
-            U_s, V_s, _ = normalize_UV(U_s, V_s, F_s_norm)
+                P_R_norm = sqrt(sum(P_R.data) ** 2) if issparse(P_R) else sqrt(sum(square(P_R)))
+                U_R, V_R, _ = normalize_UV(U_R, V_R, P_R_norm)
 
-        (U_L, V_L, beta_L, obj_WL,
-         U_R, V_R, beta_R, obj_WR,
-         U_s, V_s, beta_Fs, obj_Fs,
-         Ustar, obj_multiNMF) = multiNMF(P_L, U_L, V_L, beta_L, obj_WL,
-                                         P_R, U_R, V_R, beta_R, obj_WR,
-                                         F_s, U_s, V_s, beta_Fs, obj_Fs,
-                                         alpha, inner_iter_count, nmf_iter_count, tol)
+                F_s_norm = sqrt(sum(F_s.data) ** 2) if issparse(F_s) else sqrt(sum(square(F_s)))
+                U_s, V_s, _ = normalize_UV(U_s, V_s, F_s_norm)
 
-        Theta = G_Q * C + G_L * P_L + G_R * P_R
-        F = trace(2 * C.T * C + P_L.T * P_L + P_R.T * P_R - 2 * C.T * S_L * P_L - 2 * C.T * S_R * P_R)
-        Omega = norm(Y - Theta, ord='fro') ** 2 + gamma * trace(Y.T * Y - Y.T * S_M * Y) + mu * norm(Y - Y_0, ord='fro') ** 2
+            (U_L, V_L, beta_L, obj_WL,
+             U_R, V_R, beta_R, obj_WR,
+             U_s, V_s, beta_Fs, obj_Fs,
+             Ustar, obj_multiNMF) = multiNMF(P_L, U_L, V_L, beta_L, obj_WL,
+                                             P_R, U_R, V_R, beta_R, obj_WR,
+                                             F_s, U_s, V_s, beta_Fs, obj_Fs,
+                                             alpha, inner_iter_count, nmf_iter_count, tol)
 
-        objective_old = objective
-        objective = F + Omega + obj_multiNMF
+            Theta = G_Q * C + G_L * P_L + G_R * P_R
+            F = trace(2 * C.T * C + P_L.T * P_L + P_R.T * P_R - 2 * C.T * S_L * P_L - 2 * C.T * S_R * P_R)
+            Omega = norm(Y - Theta, ord='fro') ** 2 + gamma * trace(Y.T * Y - Y.T * S_M * Y) + mu * norm(Y - Y_0, ord='fro') ** 2
 
-        rel = (objective_old - objective) / objective_old
-        Y = G_Q * C + G_L * P_L + G_R * P_R
 
-        if abs(rel) < tol:
-            return Y
+            objective = F + Omega + obj_multiNMF
+
+            Y = G_Q * C + G_L * P_L + G_R * P_R
 
     return Y

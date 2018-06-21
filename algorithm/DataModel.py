@@ -1,5 +1,6 @@
 from __future__ import print_function
 import io
+import os
 import numpy as np
 from scipy.sparse import *
 from sklearn.preprocessing import normalize
@@ -8,8 +9,6 @@ from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 from Algorithm import clustype_no_clus_algorithm
 from Algorithm import clustype_algorithm
-
-np.random.seed(2018)
 
 
 def normalize_graph(G):
@@ -81,9 +80,9 @@ def create_Y_0(Y, rand_size):
         if Y[i, 2] == 1:
             org_rows.append(i)
 
-    pers_rand_size = int(type_counts[0][1] * rand_size / 100)
-    loc_rand_size = int(type_counts[1][1] * rand_size / 100)
-    org_rand_size = int(type_counts[2][1] * rand_size / 100)
+    pers_rand_size = int(type_counts[0][1] * rand_size * 0.01)
+    loc_rand_size = int(type_counts[1][1] * rand_size * 0.01)
+    org_rand_size = int(type_counts[2][1] * rand_size * 0.01)
 
     rand_pers_rows = np.random.choice(np.asarray(pers_rows), pers_rand_size, replace=False)
     rand_loc_rows = np.random.choice(np.asarray(loc_rows), loc_rand_size, replace=False)
@@ -113,7 +112,7 @@ def create_Y_0(Y, rand_size):
            Y_0_rows
 
 
-def compute_score(Y, score_Y, test_rows):
+def compute_score(Y, score_Y, test_rows, score_file):
     # Evaluation
     # http://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.recall_score.html#sklearn.metrics.recall_score
@@ -131,11 +130,14 @@ def compute_score(Y, score_Y, test_rows):
     precision = dict()
     recall = dict()
     f1_measure = dict()
-    for i in range(3):
-        precision[i] = precision_score(test_Y[:, i], score_Y[:, i], average="binary")
-        recall[i] = recall_score(test_Y[:, i], score_Y[:, i], average="binary")
-        f1_measure[i] = f1_score(test_Y[:, i], score_Y[:, i], average="binary")
-        print(str(i) + " Precision = " + str(precision[i]) + " Recall = " + str(recall[i]) + " F1_measure = " + str(f1_measure[i]))
+    with io.open(score_file, 'a', encoding='utf8') as score:
+        for i in range(3):
+            precision[i] = precision_score(test_Y[:, i], score_Y[:, i], average="binary")
+            recall[i] = recall_score(test_Y[:, i], score_Y[:, i], average="binary")
+            f1_measure[i] = f1_score(test_Y[:, i], score_Y[:, i], average="binary")
+            # class_no, precision, recall, F1_score
+            score.write(unicode(str(i) + ";" + str(precision[i]) + ";" + str(recall[i]) + ";" + str(f1_measure[i])+"\n"))
+        score.close()
 
 
 if __name__ == "__main__":
@@ -173,21 +175,32 @@ if __name__ == "__main__":
 
     Y = load_graph(graphs_path + "Y.txt", em_size, types_size)
 
-
     tol = 5e-4
     gamma, mu, alpha = 0.5, 0.5, 1.
 
-    initial_markup_size = 1
-    glob_iter_count, inner_iter_count, nmf_iter_count = 100, 100, 100
-    T, K = 3, 100
+    seed_sizes = [1, 7, 15, 20, 30, 40]
+    clusters_counts = [10]  # [10, 30, 50, 100, 150, 200]
+    glob_iter_count, inner_iter_count, nmf_iter_count = 150, 150, 150
+    T = 3
 
-    Y_0, test_rows, train_rows = create_Y_0(Y, initial_markup_size)
-    score_Y, C, P_L, P_R = clustype_no_clus_algorithm(S_L, S_R, S_M, G_Q, G_L, G_R, Y_0, gamma, mu, glob_iter_count)
-    print("WITHOUT CLUSTERING:")
-    compute_score(Y, score_Y, test_rows)
+    for clusters_count in clusters_counts:
+        for seed_size in seed_sizes:
+            np.random.seed(2018)
+            graphics_path = "/Users/Reist/PycharmProjects/Diploma/graphics/graphics_" + str(seed_size) + "_" + str(clusters_count)
+            if not os.path.exists(graphics_path):
+                os.makedirs(graphics_path)
 
-    score_Y = clustype_algorithm(S_L, S_R, S_M, G_Q, G_L, G_R,
-                                 Y_0, F_s, F_c, score_Y, C, P_L, P_R,
-                                 gamma, mu, alpha, T, K, glob_iter_count, inner_iter_count, nmf_iter_count, tol)
-    print("WITH CLUSTERING:")
-    compute_score(Y, score_Y, test_rows)
+            print("WITHOUT CLUSTERING:")
+            noclus_file_base_name = graphics_path + "/NOCLUS"
+            Y_0, test_rows, train_rows = create_Y_0(Y, seed_size)
+            score_Y, C, P_L, P_R = clustype_no_clus_algorithm(S_L, S_R, S_M, G_Q, G_L, G_R, Y_0, gamma, mu, glob_iter_count, noclus_file_base_name)
+            no_clus_score_file = graphics_path + "/NOCLUS_score.txt"
+            compute_score(Y, score_Y, test_rows, no_clus_score_file)
+
+            print("WITH CLUSTERING:")
+            clus_file_base_name = graphics_path + "/CLUS"
+            score_Y = clustype_algorithm(S_L, S_R, S_M, G_Q, G_L, G_R,
+                                         Y_0, F_s, F_c, score_Y, C, P_L, P_R,
+                                         gamma, mu, alpha, T, clusters_count, glob_iter_count, inner_iter_count, nmf_iter_count, tol, clus_file_base_name)
+            clus_score_file = graphics_path + "/CLUS_score.txt"
+            compute_score(Y, score_Y, test_rows, clus_score_file)
